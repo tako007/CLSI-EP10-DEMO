@@ -7,19 +7,19 @@ import statsmodels.api as sm
 
 # FUNCTIONS
 def coefs_(df, prediction=False, summary=False, coef=False):
-        if summary:
-            y = df["VALUE"]
-            X = sm.add_constant(df[["X", "Xsq_adj", "Carryover", "Time"]], prepend=False)
-            mod = sm.OLS(y, X)
-            res = mod.fit()
-        else:
-            model = LinearRegression().fit(
-                df[["X", "Xsq_adj", "Time", "Carryover"]].to_numpy(),
-                df["VALUE"].to_numpy())
-            if prediction:
-                return pd.Series(model.predict(df[["X", "Xsq_adj", "Time", "Carryover"]]))
-            elif coef:
-                return np.append(model.coef_, model.intercept_)
+    if summary:
+        y = df["VALUE"]
+        X = sm.add_constant(df[["X", "Xsq_adj", "Carryover", "Time"]], prepend=False)
+        mod = sm.OLS(y, X)
+        res = mod.fit()
+    else:
+        model = LinearRegression().fit(
+            df[["X", "Xsq_adj", "Time", "Carryover"]].to_numpy(),
+            df["VALUE"].to_numpy())
+        if prediction:
+            return pd.Series(model.predict(df[["X", "Xsq_adj", "Time", "Carryover"]]))
+        elif coef:
+            return np.append(model.coef_, model.intercept_)
 def coef_t(df,assigned_mid,assigned_low,run):
     y = df[df.RUNS == run]["VALUE"]
     X = sm.add_constant(df[df.RUNS == run][["X","Xsq_adj","Carryover","Time"]],prepend=False)
@@ -64,14 +64,14 @@ def check_data_validity(*dataframes):
 st.markdown("<h1 style='text-align: center;'>CLSI EP10 DEMONSTRATION</h1>", unsafe_allow_html=True)
 # INITIAL DATA
 initial_data_runs = pd.DataFrame([[92,92,93,90,92],
-              [9 ,9,9,9,9],
-              [54,54,54,54,52],
-              [56,54,54,55,55],
-              [10,9,9,9,9],
-              [9 ,8,9,9,9],
-              [92,91,92,92,92],
-              [95,92,96,94,94],
-              [59,56,58,52,53]], columns=[f'Run{i+1}' for i in range(5)], index=[ "High", "Low", "Mid", "Mid", "Low", "Low", "High", "High", "Mid"])
+[9 ,9,9,9,9],
+[54,54,54,54,52],
+[56,54,54,55,55],
+[10,9,9,9,9],
+[9 ,8,9,9,9],
+[92,91,92,92,92],
+[95,92,96,94,94],
+[59,56,58,52,53]], columns=[f'Run{i+1}' for i in range(5)], index=[ "High", "Low", "Mid", "Mid", "Low", "Low", "High", "High", "Mid"])
 initial_data_assigned = pd.DataFrame([[9.0, 50.5, 92.0]], columns=["Low","Mid","High"], index=["assigned"])
 initial_data_allow_bias =  pd.DataFrame([[2,4,5]], columns=["Low","Mid","High"], index=["Allowable bias"])
 initial_data_allow_imprecision = pd.DataFrame([[8,3,2]], columns=["Low","Mid","High"], index=["Allowable imprecision(%)"])
@@ -98,11 +98,6 @@ st.session_state.allowb = st.data_editor(st.session_state.allowb, use_container_
 
 data_validity = check_data_validity(st.session_state.runs, st.session_state.assigned, st.session_state.allowi, st.session_state.allowb)
 
-
-import streamlit as st
-import pandas as pd
-import numpy as np
-
 # DESTRUCTURING DATA EDITOR
 assigned_low, assigned_mid, assigned_high = st.session_state.assigned.stack().to_numpy().round(2)
 allowable_imprecision_low, allowable_imprecision_mid, allowable_imprecision_high = st.session_state.allowi.stack().to_numpy().round(2)
@@ -116,14 +111,14 @@ data = data.set_index("SEQUENCE NUMBER",append=True)
 data = data.stack().reset_index().set_axis(["LEVEL","SEQUENCE NUMBER","RUNS","VALUE"],axis="columns")
 data = data.sort_values(["RUNS","SEQUENCE NUMBER"]).reset_index(drop=True)
 coef_data = pd.concat([pd.DataFrame(np.array([[1, 1.0, 0.333333, -4.0, 0.0, 1.0],
-       [-1, -1.0, 0.333333, -3.0, 1.0, 1.0],
-       [0, 0.0, -0.66667, -2.0, -1.0, 0.0],
-       [0, 0.0, -0.66667, -1.0, 0.0, 0.0],
-       [-1, -1.0, 0.333333, 0.0, 0.0, 1.0],
-       [-1, -1.0, 0.333333, 1.0, -1.0, 1.0],
-       [1, 1.0, 0.333333, 2.0, -1.0, 1.0],
-       [1, 1.0, 0.333333, 3.0, 1.0, 1.0],
-       [0, 0.0, -0.66667, 4.0, 1.0, 0.0]]))]*5).reset_index(drop=True).set_axis(["CODED VALUES","X","Xsq_adj","Time","Carryover","Xsq"],axis="columns")
+[-1, -1.0, 0.333333, -3.0, 1.0, 1.0],
+[0, 0.0, -0.66667, -2.0, -1.0, 0.0],
+[0, 0.0, -0.66667, -1.0, 0.0, 0.0],
+[-1, -1.0, 0.333333, 0.0, 0.0, 1.0],
+[-1, -1.0, 0.333333, 1.0, -1.0, 1.0],
+[1, 1.0, 0.333333, 2.0, -1.0, 1.0],
+[1, 1.0, 0.333333, 3.0, 1.0, 1.0],
+[0, 0.0, -0.66667, 4.0, 1.0, 0.0]]))]*5).reset_index(drop=True).set_axis(["CODED VALUES","X","Xsq_adj","Time","Carryover","Xsq"],axis="columns")
 data = pd.concat([data,coef_data],axis=1).sort_values(["RUNS","SEQUENCE NUMBER"]).reset_index(drop=True)
 data = data.assign(assigned = lambda x:x.LEVEL.map(dict(zip(["Low","Mid","High"],[assigned_low, assigned_mid, assigned_high]))),
            diff=lambda x:x.VALUE-x.assigned,
@@ -163,9 +158,15 @@ bias_low, bias_mid, bias_high =  np.array(mean_sd.filter(like="mean").mean().val
 if st.button("Show/Hide Bias Evaluation"):
     st.session_state.show_bias = not st.session_state.show_bias
 if st.session_state.show_bias and data_validity:
-    st.write(f"🥳 Bias for low concentration is acceptable (Bias={bias_low} Allowable bias={allowable_bias_low})" if bias_low < allowable_bias_low else f"😱 Bias for low concentration is unacceptable (Bias={bias_low} Allowable bias={allowable_bias_low})")
-    st.write(f"🥳 Bias for middle concentration is acceptable (Bias={bias_mid} Allowable bias={allowable_bias_mid})" if bias_mid < allowable_bias_mid else f"😱 Bias for middle concentration is unacceptable (Bias={bias_mid} Allowable bias={allowable_bias_mid})")
-    st.write(f"🥳 Bias for high concentration is acceptable (Bias={bias_high} Allowable bias={allowable_bias_high})" if bias_high < allowable_bias_high else f"😱 Bias for low concentration is unacceptable (Bias={bias_high} Allowable bias={allowable_bias_high})")
+    st.write(f"🥳 Bias for low concentration is acceptable (Bias={bias_low} Allowable bias={allowable_bias_low})" 
+             if bias_low < allowable_bias_low 
+             else f"😱 Bias for low concentration is unacceptable (Bias={bias_low} Allowable bias={allowable_bias_low})")
+    st.write(f"🥳 Bias for middle concentration is acceptable (Bias={bias_mid} Allowable bias={allowable_bias_mid})" 
+             if bias_mid < allowable_bias_mid 
+             else f"😱 Bias for middle concentration is unacceptable (Bias={bias_mid} Allowable bias={allowable_bias_mid})")
+    st.write(f"🥳 Bias for high concentration is acceptable (Bias={bias_high} Allowable bias={allowable_bias_high})" 
+             if bias_high < allowable_bias_high 
+             else f"😱 Bias for low concentration is unacceptable (Bias={bias_high} Allowable bias={allowable_bias_high})")
 
 
 V_w = ((mean_sd.filter(like="sd") ** 2).sum() / 5).round(2).to_numpy()
@@ -181,9 +182,15 @@ imprecision_low, imprecision_mid, imprecision_high = list(C)
 if st.button("Show/Hide Imprecision Evaluation"):
     st.session_state.show_imprecision = not st.session_state.show_imprecision
 if st.session_state.show_imprecision and data_validity:
-    st.write(f"🥳 Imprecision for low concentration is acceptable (Imprecision={imprecision_low} Allowable imprecision={allowable_imprecision_low})" if imprecision_low < allowable_imprecision_low else f"😱 Imprecision for low concentration is unacceptable (Imprecision={imprecision_low} Allowable imprecision={allowable_imprecision_low})")
-    st.write(f"🥳 Imprecision for middle concentration is acceptable (Imprecision={imprecision_mid} Allowable imprecision={allowable_imprecision_mid})" if imprecision_mid < allowable_imprecision_mid else f"😱 Imprecision for middle concentration is unacceptable (Imprecision={imprecision_mid} Allowable imprecision={allowable_imprecision_mid})")
-    st.write(f"🥳 Imprecision for high concentration is acceptable (Imprecision={imprecision_high} Allowable imprecision={allowable_imprecision_high})" if imprecision_high < allowable_imprecision_high else f"😱 Imprecision for low concentration is unacceptable (Imprecision={imprecision_high} Allowable imprecision={allowable_imprecision_high})")
+    st.write(f"🥳 Imprecision for low concentration is acceptable (Imprecision={imprecision_low} Allowable imprecision={allowable_imprecision_low})" 
+             if imprecision_low < allowable_imprecision_low 
+             else f"😱 Imprecision for low concentration is unacceptable (Imprecision={imprecision_low} Allowable imprecision={allowable_imprecision_low})")
+    st.write(f"🥳 Imprecision for middle concentration is acceptable (Imprecision={imprecision_mid} Allowable imprecision={allowable_imprecision_mid})" 
+             if imprecision_mid < allowable_imprecision_mid 
+             else f"😱 Imprecision for middle concentration is unacceptable (Imprecision={imprecision_mid} Allowable imprecision={allowable_imprecision_mid})")
+    st.write(f"🥳 Imprecision for high concentration is acceptable (Imprecision={imprecision_high} Allowable imprecision={allowable_imprecision_high})" 
+             if imprecision_high < allowable_imprecision_high 
+             else f"😱 Imprecision for low concentration is unacceptable (Imprecision={imprecision_high} Allowable imprecision={allowable_imprecision_high})")
 
 
 # MULTIPLE REGRESSION EVALUATION
@@ -202,7 +209,8 @@ data = data.assign(slope_subtotal=data.VALUE * data.slope_coef,
 data["predicted"] = data.groupby("RUNS").apply(coefs_).T.stack().sort_index(level=1).reset_index(drop=True)
 data["residual"] = data.VALUE - data.predicted
 data["residual_sq"] = ((data.VALUE - data.predicted)**2).round(2)
-df_t = pd.concat([(abs(coef_t(data, assigned_mid, assigned_low, day).t_value) > 4.6).rename(day + " t Value") for day in data.RUNS.unique().tolist()], axis=1).replace({True: "X", False: "✓"})
+df_t = pd.concat([(abs(coef_t(data, assigned_mid, assigned_low, day).t_value) > 4.6).rename(day + " t Value") 
+                  for day in data.RUNS.unique().tolist()], axis=1).replace({True: "X", False: "✓"})
 df_t.index = ["Intercept (B0adj)", "Slope (B1adj)", "%Carryover (B2adj)", "Nonlinearity (B3adj)", "Drift (B4)"]
 
 if st.button("Show/Hide Multiple Regression Evaluation"):
